@@ -1,0 +1,905 @@
+/* --- 🎨 NARRATIVA DE DESIGN: LABORATÓRIO MODERNO --- */
+:root {
+  /* 1. Paleta de Cores Sóbria e Profissional */
+  --bg-primary: #121212;      /* Fundo principal escuro e neutro */
+  --bg-secondary: #1e1e1e00;   /* Fundo de painéis/cards */
+  --border-color: #333333;   /* Bordas sutis */
+  
+  --text-primary: #E0E0E0;   /* Texto principal (alto contraste) */
+  --text-secondary: #888888;  /* Texto secundário (labels, subtítulos) */
+  
+  --accent-primary: #007AFF; /* Cor de destaque única e profissional (azul) */
+  --accent-hover: #0056b3;
+  
+  --error-color: #E53935;
+  --success-color: #43A047;
+}
+
+* { 
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  /* 2. Tipografia como Protagonista */
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-primary); /* Fundo sólido e neutro */
+  color: var(--text-primary);
+  font-size: 14px;
+  overflow-x: hidden;
+}
+
+/* --- LAYOUT PRINCIPAL --- */
+.wrap {
+  display: flex;
+  gap: 20px;
+  height: 100vh;
+  padding: 20px;
+  flex-wrap: wrap;
+}
+
+.canvas-container {
+  position: relative;
+  flex: 1;
+  min-width: 600px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =================================================== */
+/* INÍCIO DA CORREÇÃO: Seletor alterado de 'canvas' para '#canvas' */
+/* =================================================== */
+#canvas {
+  background: #000; /* Fundo do canvas preto para máximo contraste */
+  border-radius: 22px;
+  display: block;
+  border: 1px solid var(--border-color); /* Borda sutil */
+  background-clip: padding-box;
+}
+/* =================================================== */
+/* FIM DA CORREÇÃO                                     */
+/* =================================================== */
+
+
+/* --- PAINÉIS E CONTROLES (ESTÉTICA MINIMALISTA) --- */
+.controls-container {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 360px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) var(--bg-secondary);
+}
+
+.controls-container::-webkit-scrollbar { width: 6px; }
+.controls-container::-webkit-scrollbar-track { background: var(--bg-primary); }
+.controls-container::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+.controls-container::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+.panel {
+  background: var(--bg-secondary); /* Fundo sólido, sem gradiente */
+  padding: 20px;
+  border-radius: 15px;
+  border: 1px solid var(--border-color);
+  background-clip: padding-box;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  /* Hierarquia Tipográfica */
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  fill: var(--text-secondary); /* Ícones discretos */
+  flex-shrink: 0;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 16px 0;
+}
+
+/* --- TIPOGRAFIA E ELEMENTOS DE UI --- */
+label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 10px;
+  color: var(--text-secondary); /* Labels em cinza suave */
+}
+
+small {
+  color: var(--text-secondary);
+  font-size: 13px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* Números e dados com fonte mono-espaçada */
+.monospace-font {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+button {
+  padding: 9px 16px;
+  border-radius: 15px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #fff;
+}
+button:hover .icon {
+  fill: #fff;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+button:disabled:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+button:disabled:hover .icon {
+    fill: var(--text-secondary);
+}
+
+
+button.secondary { background: var(--bg-secondary); }
+button.tertiary { background: var(--bg-secondary); color: var(--error-color); }
+button.tertiary:hover { background: var(--error-color); border-color: var(--error-color); color: #fff; }
+button.tertiary:hover .icon { fill: #fff; }
+
+select, input[type=color], input[type=number], input[type=search] {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+select:focus, input[type=color]:focus, input[type=number]:focus, input[type=search]:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+}
+
+/* Sliders planos, sem glow */
+input[type=range] {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-primary);
+  outline: none;
+  -webkit-appearance: none;
+  margin: 0 8px;
+  border: 1px solid var(--border-color);
+}
+
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s ease;
+}
+input[type=range]:hover::-webkit-slider-thumb {
+  background: var(--accent-primary);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--text-primary);
+  cursor: pointer;
+  border: none;
+}
+input[type=range]:hover::-moz-range-thumb {
+  background: var(--accent-primary);
+}
+
+/* --- OVERLAYS DO CANVAS --- */
+.canvas-overlay, .info-overlay, .scale-overlay {
+  position: absolute;
+  background: rgba(30, 30, 30, 0.8); /* Fundo translúcido */
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+}
+
+.canvas-overlay { top: 10px; left: 10px; min-width: 200px; }
+.info-overlay { top: 10px; right: 10px; min-width: 180px; font-size: 12px; }
+.scale-overlay { bottom: 20px; right: 20px; width: 200px; }
+
+/* Legenda de cores científica */
+.color-bar {
+  height: 12px;
+  border-radius: 4px;
+  margin: 8px 0;
+  /* Paleta Viridis (representação) */
+  background: linear-gradient(to right, #440154, #3b528b, #21918c, #5ec962, #fde725);
+  border: 1px solid var(--border-color);
+}
+
+.scale-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+/* =================================================== */
+/* --- INÍCIO DA IMPLEMENTAÇÃO: TOOLTIP DO CANVAS --- */
+/* =================================================== */
+.canvas-tooltip {
+  position: absolute;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  font-size: 12px;
+  pointer-events: none; /* Crucial para não interferir com outros eventos do mouse no canvas */
+  z-index: 10;
+  white-space: nowrap; /* Impede que o conteúdo quebre a linha */
+  transition: opacity 0.1s ease;
+}
+/* =================================================== */
+/* --- FIM DA IMPLEMENTAÇÃO --- */
+/* =================================================== */
+
+
+/* --- ESTATÍSTICAS E DADOS --- */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.stat-item {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 2px;
+}
+
+.stat-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.status-running { background: var(--success-color); }
+.status-paused { background: var(--text-secondary); }
+
+.control-buttons {
+  position: absolute;
+  bottom: 30px;
+  left: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+ul {
+  font-size: 13px;
+  color: var(--text-secondary);
+  padding-left: 20px;
+  margin: 8px 0 0 0;
+  line-height: 1.7;
+}
+ul li { margin-bottom: 6px; }
+ul b { color: var(--text-primary); }
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0;
+}
+.checkbox-container label {
+  margin: 0;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent-primary);
+}
+
+/* --- MODAL DE RELATÓRIO --- */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 1200px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  border-radius: 100%;
+  padding-inline: 5px;
+}
+.close-button:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 0 24px 24px 24px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.modal-body::-webkit-scrollbar { width: 6px; }
+.modal-body::-webkit-scrollbar-track { background: var(--bg-primary); }
+.modal-body::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+.modal-body::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+
+.modal-body h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 24px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+}
+
+/* Abas do Modal */
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--border-color);
+  padding: 16px 24px 0 24px;
+  flex-shrink: 0;
+}
+.tab-link {
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-weight: 600;
+  position: relative;
+  bottom: -1px;
+}
+.tab-link.active {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  border-bottom: 1px solid var(--bg-primary);
+}
+.modal-tab-content {
+    display: none;
+}
+.modal-tab-content.active {
+    display: block;
+}
+
+
+/* =================================================== */
+/* CÓDIGO CORRIGIDO PARA A SEÇÃO DE RESUMO DO RELATÓRIO */
+/* =================================================== */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.summary-grid ul {
+  margin: 0;
+  padding-left: 0;
+  list-style-type: none;
+}
+
+.summary-grid b { 
+    font-family: 'Roboto Mono', monospace; 
+    color: var(--text-primary); 
+}
+
+.summary-grid .icon { 
+    flex-shrink: 0; 
+    fill: var(--text-secondary); 
+}
+
+.summary-grid .sub-stats-list {
+    padding-left: 28px;
+    margin-top: 0;
+}
+
+/* Card de resumo com destaque visual */
+.summary-card {
+  background-color: #1e1e1e;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2); /* Sugestão: adicione a sombra que discutimos */
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Cabeçalho dentro do card */
+.summary-card .metric-header {
+  font-size: 1.1em;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Item da lista (APENAS UMA DEFINIÇÃO) */
+.summary-grid li { 
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  padding: 4px 0;
+}
+
+.summary-grid li span:first-child {
+    color: var(--text-secondary);
+}
+
+.charts-grid-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 12px;
+}
+.chart-wrapper {
+  width: 100%;
+  height: 280px;
+  background: #fff;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px;
+  cursor: crosshair;
+}
+#custom-chart-wrapper {
+    grid-column: 1 / -1; /* Faz o gráfico ocupar a largura toda */
+    height: 400px; /* Gráfico maior */
+}
+.chart-wrapper canvas {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+}
+.chart-controls { 
+  margin-bottom: 24px;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#custom-chart-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 10px;
+  background: #000;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+#custom-chart-controls .checkbox-container {
+    margin: 0;
+}
+.data-table-controls {
+  margin-bottom: 12px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+#reportTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+#reportTable th, #reportTable td {
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+#reportTable thead {
+  position: sticky;
+  top: 0;
+  background: #2a2a2a;
+}
+ #reportTable th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+#reportTable th.sortable:hover {
+  color: var(--accent-primary);
+}
+#reportTable th .sort-arrow {
+  display: inline-block;
+  width: 1em;
+  text-align: center;
+}
+#reportTable tbody tr:hover {
+  background: #2c2c2c;
+}
+#reportTable td { font-family: 'Roboto Mono', monospace; }
+#recordProgress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: var(--accent-primary);
+  width: 0%;
+  transition: width 0.1s linear;
+}
+
+.modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* --- INÍCIO: NOVOS ESTILOS PARA A ABA DE CORRELAÇÕES --- */
+.analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 24px;
+    padding-top: 16px;
+}
+
+.analysis-card {
+    background-color: #1a1a1a;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.analysis-card h4 {
+    margin: 0 0 4px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.analysis-card .description {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 0 0 16px 0;
+    min-height: 30px;
+}
+
+.analysis-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-grow: 1;
+}
+
+.analysis-content .chart-container {
+    /* --- INÍCIO DA CORREÇÃO --- */
+
+    /* REMOVEMOS 'flex-grow: 1' e 'min-height: 250px' que causavam a instabilidade. */
+    
+    /* ADICIONAMOS aspect-ratio para forçar uma proporção estável (ex: 16:9). */
+    /* Isso garante que a altura sempre corresponda à largura, eliminando o "esticamento". */
+    aspect-ratio: 16 / 9;
+
+    /* Apenas para garantir um bom comportamento dentro do layout flex. */
+    flex-shrink: 0;
+
+    /* Essencial para posicionar o canvas corretamente dentro do contêiner. */
+    position: relative; 
+    
+    /* --- FIM DA CORREÇÃO --- */
+
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* =================================================== */
+/* INÍCIO DA CORREÇÃO: Nova regra para os canvas de correlação */
+/* =================================================== */
+.analysis-content .chart-container canvas {
+    /* --- INÍCIO DA CORREÇÃO --- */
+    
+    /* Este padrão faz o canvas preencher perfeitamente o seu contêiner pai, */
+    /* que agora tem uma proporção estável. */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    /* --- FIM DA CORREÇÃO --- */
+    
+    border: none;
+    background: transparent;
+}
+/* =================================================== */
+/* FIM DA CORREÇÃO                                     */
+/* =================================================== */
+
+.analysis-content .stats-container {
+    font-size: 13px;
+    background-color: #101010;
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+}
+.analysis-content .stats-container ul {
+    margin: 0;
+    padding: 0;
+    list-style-type: none;
+}
+.analysis-content .stats-container li {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    gap: 10px;
+}
+.analysis-content .stats-container li:last-child {
+    margin-bottom: 0;
+}
+/* --- FIM: NOVOS ESTILOS PARA A ABA DE CORRELAÇÕES --- */
+
+
+/* --- NOVOS ESTILOS PARA MODAIS DE OPÇÕES --- */
+#pdf-options-body, #csv-options-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 40vh;
+  overflow-y: auto;
+  padding-right: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+/* ================================
+   INPUT NUMBER CUSTOMIZADO
+   ================================ */
+.input-number-styled {
+  background: transparent; /* Fundo transparente */
+  border: 1px solid #007AFF; /* Opcional: borda azul para combinar */
+  color: #fff; /* Ajuste conforme o tema (pode ser #000 se fundo claro) */
+  padding: 6px 10px;
+  border-radius: 6px;
+  outline: none;
+}
+
+/* Estilo das setas (botões nativos) */
+.input-number-styled::-webkit-inner-spin-button,
+.input-number-styled::-webkit-outer-spin-button {
+  -webkit-appearance: none; /* Remove estilos default no Safari/Chrome */
+  appearance: none;
+  filter: invert(38%) sepia(99%) saturate(2232%) hue-rotate(198deg) brightness(101%) contrast(101%);
+  opacity: 1; /* Sempre visíveis */
+  transition: filter 0.2s ease-in-out;
+}
+
+/* Hover opcional: realce mais forte */
+.input-number-styled:hover::-webkit-inner-spin-button,
+.input-number-styled:hover::-webkit-outer-spin-button {
+  filter: brightness(120%) saturate(120%) 
+          invert(38%) sepia(99%) saturate(2232%) hue-rotate(198deg);
+}
+
+
+/* --- INÍCIO: ESTILOS PARA A LISTA DE HISTÓRICO --- */
+.history-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 150px; /* Limita a altura para evitar que o painel cresça demais */
+  overflow-y: auto; /* Adiciona scroll se a lista for longa */
+}
+
+.history-list li {
+  background-color: #1a1a1a;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  margin-bottom: 0; /* Sobrescreve o margin-bottom do estilo geral de li */
+}
+
+.history-list li:hover {
+  background-color: #252525;
+  border-color: var(--accent-primary);
+}
+
+.history-list .history-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+}
+
+.history-list .history-item-content small {
+  margin: 0;
+  font-size: 11px;
+}
+/* --- FIM: ESTILOS PARA A LISTA DE HISTÓRICO --- */
+
+
+/* --- LAYOUT RESPONSIVO --- */
+@media (max-width: 1200px) {
+  .wrap { flex-direction: column; height: auto; gap: 16px; }
+  .canvas-container { min-width: unset; }
+  .controls-container { width: 100%; max-height: none; flex-direction: row; overflow-x: auto; gap: 12px; }
+  .panel { min-width: 320px; }
+  /* =================================================== */
+  /* INÍCIO DA CORREÇÃO: Seletor alterado de 'canvas' para '#canvas' */
+  /* =================================================== */
+  #canvas { width: 100%; height: auto; }
+  /* =================================================== */
+  /* FIM DA CORREÇÃO                                     */
+  /* =================================================== */
+}
+
+@media (max-width: 768px) {
+  .wrap { padding: 12px; }
+  .controls-container { flex-direction: column; }
+  .panel { min-width: unset; }
+  .modal-content { width: 95%; max-width: 95%; }
+  .charts-grid-container { grid-template-columns: 1fr; }
+  .analysis-grid { grid-template-columns: 1fr; }
+}
+
+@media print {
+    body * { visibility: hidden; }
+    #reportModal, #reportModal * { visibility: visible; }
+    #reportModal {
+        position: absolute;
+        left: 0; top: 0;
+        width: 100%; height: auto;
+        background: #fff;
+        backdrop-filter: none;
+        display: block;
+    }
+    .modal-content {
+      box-shadow: none; border: none;
+      max-height: none; height: auto;
+      color: #000; background: #fff;
+    }
+    .modal-header, .modal-footer, .modal-tabs, .data-table-controls, .chart-controls { display: none; }
+    .modal-tab-content { display: block !important; }
+    .modal-body { color: #000; overflow: visible; padding: 5px;}
+    .summary-grid, h3 { color: #000; }
+    ul, li, b, .monospace-font { color: #000 !important; }
+    .icon { fill: #000 !important; }
+    .chart-wrapper { page-break-inside: avoid; border-color: #ccc; }
+    #reportTable { font-size: 9px; }
+    #reportTable th, #reportTable td { border-color: #ccc; }
+    #reportTable thead { background: #eee; color: #000; }
+    /* CORREÇÃO ADICIONADA: Permite que a tabela flua para outras páginas */
+    .table-container {
+        max-height: none !important;
+        overflow-y: visible !important;
+        border: none !important;
+    }
+    .section-hidden-in-print { display: none !important; }
+}
