@@ -903,3 +903,304 @@ input[type="checkbox"] {
     }
     .section-hidden-in-print { display: none !important; }
 }
+
+/* --- ESTILOS PARA TIMELINE INTERATIVA --- */
+.timeline-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.timeline-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.playback-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.timeline-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.timeline-btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #fff;
+}
+
+.timeline-btn:hover .icon {
+  fill: #fff;
+}
+
+.timeline-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timeline-info {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.timeline-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.timeline-thumbnails {
+  display: flex;
+  gap: 17px;
+  overflow-x: auto;
+  padding: 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) var(--bg-secondary);
+}
+
+.timeline-thumbnails::-webkit-scrollbar {
+  height: 4px;
+}
+
+.timeline-thumbnails::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+.timeline-thumbnails::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 2px;
+}
+
+.timeline-thumbnails::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+.timeline-thumbnail {
+  flex-shrink: 0;
+  width: 80px;
+  height: 60px;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-thumbnail:hover {
+  border-color: var(--accent-primary);
+}
+
+.timeline-thumbnail.active {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+}
+
+.timeline-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.timeline-thumbnail .thumbnail-label {
+  position: absolute;
+  bottom: 2px;
+  left: 2px;
+  right: 2px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  font-size: 10px;
+  text-align: center;
+  padding: 2px;
+  border-radius: 2px;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.timeline-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-primary);
+  outline: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+}
+
+.timeline-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.timeline-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.1);
+}
+
+.timeline-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.timeline-export {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.export-btn {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--accent-primary);
+  background: var(--accent-primary);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  align-self: flex-start;
+}
+
+.export-btn:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.export-options {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.export-options label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.export-options input,
+.export-options select {
+  padding: 4px 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+/* --- INÍCIO: NOVOS ESTILOS PARA O PLAYHEAD DA TIMELINE --- */
+
+/* 1. Container para a pré-visualização do frame atual (o "playhead") */
+.timeline-playhead-preview {
+  display: flex;
+  justify-content: center; 
+  align-items: center;
+  position: relative;
+  height: 214px; 
+  /* Removemos o margin-bottom para que a linha possa se conectar ao slider */
+  margin-bottom: 0;
+  margin-top: 2rem;
+  /* Adicionamos padding para recriar o espaçamento, mas dentro do elemento */
+  padding-bottom: 18px; 
+}
+
+/* 2. O frame maior que será exibido */
+.timeline-playhead-preview .playhead-image-container {
+  width: 47%; /* Largura maior */
+  height: 129%; /* Altura maior, mantendo a proporção 4:3 */
+  border: 2px solid var(--accent-primary); /* Borda de destaque */
+  border-radius: 8px;
+  background-color: #000;
+  box-shadow: 0 4px 15px rgba(0, 122, 255, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-playhead-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 3. Indicador de tempo no playhead */
+.timeline-playhead-preview .playhead-time {
+  position: absolute;
+  bottom: 5px;
+  background: #0000001f;
+  backdrop-filter: blur(10px);
+  color: #fff;
+  border: 1px solid #3c3c3c33;
+  padding: 3px 8px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 600;
+}
+
+/* 5. Modificação: Deixa o thumbnail ativo na lista mais sutil */
+.timeline-thumbnail.active {
+  border-color: var(--accent-hover);
+  /* Remove a sombra e diminui a opacidade para evitar poluição visual */
+  box-shadow: none;
+  opacity: 0.5; 
+}
+
+/* --- FIM: NOVOS ESTILOS PARA O PLAYHEAD DA TIMELINE --- */

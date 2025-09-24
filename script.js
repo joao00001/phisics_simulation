@@ -79,6 +79,13 @@ let simulationParametersSnapshot = {};
 // --- NOVO: Variável para armazenar o histórico de gravações ---
 let recordingHistory = [];
 
+// --- VARIÁVEIS DE CONTROLE DA TIMELINE ---
+let isPlayingTimeline = false;
+let currentTimelineFrame = 0;
+let timelinePlaybackInterval = null;
+let timelineFrameRate = 10; // FPS para playback
+let timelineThumbnails = []; // Array para armazenar miniaturas
+
 // --- Flag para controlar a renderização dos gráficos de correlação ---
 let correlationChartsRendered = false;
 
@@ -1351,6 +1358,9 @@ function populateReportModal() {
     setupTableSorting(); 
     drawAllCharts(); 
     setupCustomChart();
+    
+    // Inicializar timeline
+    initializeTimeline();
 }
 
 function drawAllCharts() {
@@ -1379,22 +1389,55 @@ function drawAllCharts() {
 }
 document.getElementById('logScaleToggle').addEventListener('change', drawAllCharts);
 document.getElementById('movingAverageToggle').addEventListener('change', drawAllCharts);
+// Substitua toda a sua função populateTable por esta versão mais segura:
 function populateTable(data) {
     const tableHead = document.querySelector('#reportTable thead');
     const tableBody = document.querySelector('#reportTable tbody');
-    tableHead.innerHTML = ''; tableBody.innerHTML = '';
+    tableHead.innerHTML = ''; 
+    tableBody.innerHTML = '';
+
     if (data.length === 0) return;
-    const filteredData = data.map(row => { const newRow = { ...row }; delete newRow['Histograma EC']; return newRow; });
+
+    // Filtra os dados, removendo as chaves que não devem ir para a tabela
+    const filteredData = data.map(row => {
+        const newRow = { ...row };
+        delete newRow['Histograma EC'];
+        delete newRow['snapshot'];
+        return newRow;
+    });
+
+    // Se depois de filtrar não sobrar dados, não faz nada
+    if (filteredData.length === 0) return;
+
+    // Cria o cabeçalho da tabela
     const headers = Object.keys(filteredData[0]);
     let headerHtml = '<tr>';
     headers.forEach(h => headerHtml += `<th class="sortable" data-key="${h}">${h}<span class="sort-arrow"></span></th>`);
-    headerHtml += '</tr>'; tableHead.innerHTML = headerHtml;
+    headerHtml += '</tr>';
+    tableHead.innerHTML = headerHtml;
+
+    // Cria o corpo da tabela
     let tableHtml = '';
     filteredData.forEach(row => {
         tableHtml += '<tr>';
-        // --- INÍCIO DA REFATORAÇÃO: Formatar números na tabela ---
-        headers.forEach(h => tableHtml += `<td>${typeof row[h] === 'number' ? formatNumberForDisplay(row[h], 3) : row[h]}</td>`);
-        // --- FIM DA REFATORAÇÃO ---
+        headers.forEach(header => {
+            const value = row[header];
+            let displayValue;
+
+            // LÓGICA DE SEGURANÇA APLICADA AQUI 👇
+            if (typeof value === 'number') {
+                // Se for um número, formata
+                displayValue = formatNumberForDisplay(value, 3);
+            } else if (typeof value === 'object' && value !== null) {
+                // Se for um objeto (como um array ou outro objeto), exibe um placeholder
+                displayValue = '[Objeto de Dados]';
+            } else {
+                // Para qualquer outra coisa (texto, etc.), exibe como está
+                displayValue = value;
+            }
+            
+            tableHtml += `<td>${displayValue}</td>`;
+        });
         tableHtml += '</tr>';
     });
     tableBody.innerHTML = tableHtml;
@@ -2205,3 +2248,549 @@ function createAnalysisCard(id, title, description, statsHtml) {
         </div>
     `;
 }
+
+// --- EVENT LISTENERS PARA CONTROLES DA TIMELINE ---
+document.getElementById('playBtn').addEventListener('click', playRecording);
+document.getElementById('pauseTimelineBtn').addEventListener('click', pauseRecording);
+document.getElementById('stepForwardBtn').addEventListener('click', stepForward);
+document.getElementById('stepBackwardBtn').addEventListener('click', stepBackward);
+document.getElementById('frameSlider').addEventListener('input', onFrameSliderChange);
+document.getElementById('exportGifBtn').addEventListener('click', exportGIF);
+
+// --- FUNÇÕES DE CONTROLE DA TIMELINE ---
+function playRecording() {
+    if (!recordedData || recordedData.length === 0) return;
+
+    if (currentTimelineFrame >= recordedData.length - 1) {
+        currentTimelineFrame = 0;
+    }
+    
+    if (isPlayingTimeline) {
+        pauseRecording();
+        return;
+    }
+    
+    isPlayingTimeline = true;
+    updatePlayButton();
+    
+    timelinePlaybackInterval = setInterval(() => {
+        if (currentTimelineFrame >= recordedData.length - 1) {
+            pauseRecording();
+            return;
+        }
+        
+        currentTimelineFrame++;
+        updateTimelineDisplay();
+        renderTimelineFrame();
+    }, 1000 / timelineFrameRate);
+}
+
+function pauseRecording() {
+    isPlayingTimeline = false;
+    if (timelinePlaybackInterval) {
+        clearInterval(timelinePlaybackInterval);
+        timelinePlaybackInterval = null;
+    }
+    updatePlayButton();
+}
+
+function stepForward() {
+    if (!recordedData || recordedData.length === 0) return;
+    
+    pauseRecording();
+    if (currentTimelineFrame < recordedData.length - 1) {
+        currentTimelineFrame++;
+        updateTimelineDisplay();
+        renderTimelineFrame();
+    }
+}
+
+function stepBackward() {
+    if (!recordedData || recordedData.length === 0) return;
+    
+    pauseRecording();
+    if (currentTimelineFrame > 0) {
+        currentTimelineFrame--;
+        updateTimelineDisplay();
+        renderTimelineFrame();
+    }
+}
+
+function onFrameSliderChange(event) {
+    if (!recordedData || recordedData.length === 0) return;
+    
+    pauseRecording();
+    currentTimelineFrame = parseInt(event.target.value);
+    updateTimelineDisplay();
+    renderTimelineFrame();
+}
+
+function updatePlayButton() {
+    const playBtn = document.getElementById('playBtn');
+    if (isPlayingTimeline) {
+        playBtn.innerHTML = `
+            <svg class="icon" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            Pause
+        `;
+    } else {
+        playBtn.innerHTML = `
+            <svg class="icon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            Play
+        `;
+    }
+}
+
+function updateTimelineDisplay() {
+    if (!recordedData || recordedData.length === 0) return;
+
+    const frameSlider = document.getElementById('frameSlider');
+    const currentFrameDisplay = document.getElementById('currentFrameDisplay');
+    const totalFramesDisplay = document.getElementById('totalFramesDisplay');
+    const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+    const timelineEndLabel = document.getElementById('timelineEndLabel');
+    
+    // --- INÍCIO DA ALTERAÇÃO: Lógica para atualizar o Playhead ---
+    const playheadPreview = document.getElementById('timelinePlayheadPreview');
+    // --- FIM DA ALTERAÇÃO ---
+
+
+    frameSlider.max = recordedData.length - 1;
+    frameSlider.value = currentTimelineFrame;
+
+    currentFrameDisplay.textContent = currentTimelineFrame;
+    totalFramesDisplay.textContent = recordedData.length - 1;
+
+    const currentFrameData = recordedData[currentTimelineFrame];
+    const totalTime = recordedData[recordedData.length - 1]['Tempo (s)'] || 0;
+
+    // Garante que currentFrameData exista antes de tentar acessá-lo
+    if (currentFrameData) {
+        const currentTime = currentFrameData['Tempo (s)'] || 0;
+        currentTimeDisplay.textContent = currentTime.toFixed(2) + 's';
+
+        // --- INÍCIO DA ALTERAÇÃO: Atualiza o conteúdo do playhead ---
+        if (playheadPreview && currentFrameData.snapshot) {
+            // Para exibir a imagem, precisamos convertê-la para um formato de imagem (data URL)
+            // Usamos um canvas temporário para fazer isso de forma eficiente.
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            const imageData = new ImageData(currentFrameData.snapshot, canvas.width, canvas.height);
+            tempCtx.putImageData(imageData, 0, 0);
+
+            // Popula o HTML do playhead
+            playheadPreview.innerHTML = `
+                <div class="playhead-image-container">
+                    <img src="${tempCanvas.toDataURL('image/jpeg', 0.8)}" alt="Frame ${currentTimelineFrame}">
+                    <div class="playhead-time">${currentTime.toFixed(2)}s</div>
+                </div>
+            `;
+        }
+        // --- FIM DA ALTERAÇÃO ---
+
+    }
+
+    timelineEndLabel.textContent = totalTime.toFixed(2) + 's';
+
+    // Atualizar thumbnail ativo na lista
+    updateActiveThumbnail();
+}
+
+function renderTimelineFrame() {
+    if (!recordedData || recordedData.length === 0 || currentTimelineFrame >= recordedData.length) return;
+    
+    const frameData = recordedData[currentTimelineFrame];
+    if (!frameData || !frameData.snapshot) return;
+    
+    // Restaurar o estado do canvas a partir do snapshot
+    const imageData = new ImageData(frameData.snapshot, canvas.width, canvas.height);
+    ctx.putImageData(imageData, 0, 0);
+}
+
+function initializeTimeline() {
+    if (!recordedData || recordedData.length === 0) return;
+    
+    currentTimelineFrame = 0;
+    isPlayingTimeline = false;
+    
+    if (timelinePlaybackInterval) {
+        clearInterval(timelinePlaybackInterval);
+        timelinePlaybackInterval = null;
+    }
+    
+    updateTimelineDisplay();
+    updatePlayButton();
+    generateThumbnails();
+}
+
+function updateActiveThumbnail() {
+    const thumbnails = document.querySelectorAll('.timeline-thumbnail');
+    thumbnails.forEach((thumb, index) => {
+        thumb.classList.remove('active');
+        if (index === Math.floor(currentTimelineFrame / Math.max(1, Math.floor(recordedData.length / thumbnails.length)))) {
+            thumb.classList.add('active');
+        }
+    });
+}
+
+
+// --- SISTEMA DE MINIATURAS DA TIMELINE ---
+function generateThumbnails() {
+    if (!recordedData || recordedData.length === 0) return;
+    
+    const thumbnailsContainer = document.getElementById('timelineThumbnails');
+    thumbnailsContainer.innerHTML = '';
+    timelineThumbnails = [];
+    
+    // Gerar até 10 thumbnails distribuídos ao longo da gravação
+    const maxThumbnails = Math.min(10, recordedData.length);
+    const step = Math.max(1, Math.floor(recordedData.length / maxThumbnails));
+    
+    for (let i = 0; i < recordedData.length; i += step) {
+        if (timelineThumbnails.length >= maxThumbnails) break;
+        
+        const frameData = recordedData[i];
+        if (!frameData || !frameData.snapshot) continue;
+        
+        const thumbnail = createThumbnail(frameData, i);
+        if (thumbnail) {
+            timelineThumbnails.push({
+                element: thumbnail,
+                frameIndex: i,
+                time: frameData.time
+            });
+            thumbnailsContainer.appendChild(thumbnail);
+        }
+    }
+}
+
+// Substitua toda a sua função createThumbnail por esta versão corrigida:
+function createThumbnail(frameData, frameIndex) {
+    if (!frameData.snapshot) return null;
+
+    // Criar canvas temporário para gerar a miniatura
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Definir tamanho da miniatura mantendo aspect ratio
+    const aspectRatio = canvas.width / canvas.height;
+    const thumbWidth = 80;
+    const thumbHeight = Math.round(thumbWidth / aspectRatio);
+
+    tempCanvas.width = thumbWidth;
+    tempCanvas.height = thumbHeight;
+
+    // Restaurar dados da imagem no canvas temporário
+    const originalImageData = new ImageData(frameData.snapshot, canvas.width, canvas.height);
+
+    // Criar canvas intermediário com tamanho original
+    const intermediateCanvas = document.createElement('canvas');
+    const intermediateCtx = intermediateCanvas.getContext('2d');
+    intermediateCanvas.width = canvas.width;
+    intermediateCanvas.height = canvas.height;
+    intermediateCtx.putImageData(originalImageData, 0, 0);
+
+    // Redimensionar para thumbnail
+    tempCtx.drawImage(intermediateCanvas, 0, 0, canvas.width, canvas.height, 0, 0, thumbWidth, thumbHeight);
+
+    // Criar elemento da miniatura
+    const thumbnailDiv = document.createElement('div');
+    thumbnailDiv.className = 'timeline-thumbnail';
+    thumbnailDiv.style.width = thumbWidth + 'px';
+    thumbnailDiv.style.height = thumbHeight + 'px';
+
+    // Converter canvas para imagem
+    const img = document.createElement('img');
+    img.src = tempCanvas.toDataURL('image/jpeg', 0.7);
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+
+    // Adicionar label com tempo
+    const label = document.createElement('div');
+    label.className = 'thumbnail-label';
+    
+    // CORREÇÃO AQUI 👇: Usar frameData['Tempo (s)'] em vez de frameData.time
+    label.textContent = frameData['Tempo (s)'].toFixed(1) + 's';
+
+    thumbnailDiv.appendChild(img);
+    thumbnailDiv.appendChild(label);
+
+    // Adicionar evento de clique
+    thumbnailDiv.addEventListener('click', () => {
+        pauseRecording();
+        currentTimelineFrame = frameIndex;
+        updateTimelineDisplay();
+        renderTimelineFrame();
+    });
+
+    return thumbnailDiv;
+}
+
+function updateActiveThumbnail() {
+    if (timelineThumbnails.length === 0) return;
+    
+    // Encontrar thumbnail mais próximo do frame atual
+    let closestThumbnailIndex = 0;
+    let minDistance = Math.abs(timelineThumbnails[0].frameIndex - currentTimelineFrame);
+    
+    for (let i = 1; i < timelineThumbnails.length; i++) {
+        const distance = Math.abs(timelineThumbnails[i].frameIndex - currentTimelineFrame);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestThumbnailIndex = i;
+        }
+    }
+    
+    // Atualizar classes ativas
+    timelineThumbnails.forEach((thumb, index) => {
+        if (index === closestThumbnailIndex) {
+            thumb.element.classList.add('active');
+        } else {
+            thumb.element.classList.remove('active');
+        }
+    });
+}
+
+// --- MODIFICAR FUNÇÃO DE COLETA DE DADOS PARA INCLUIR SNAPSHOTS ---
+function collectFrameData(dt_val) {
+    // Capturar snapshot do canvas atual
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const snapshot = new Uint8ClampedArray(imageData.data);
+
+    // Cálculos da versão mais antiga para manter a compatibilidade do relatório
+    let kineticEnergy = 0, totalVorticity = 0, cellCount = 0;
+    const cellVolume = dx * dy;
+    
+    let max_cfl = 0;
+    let divergence_l2_norm_sq = 0;
+    let max_vel = 0;
+
+    for (let j = 1; j <= NY; j++) {
+        for (let i = 1; i <= NX; i++) {
+            const idx = IX(i,j);
+            if (!obstacle[idx]) {
+                const speed_u = Math.abs(u[idx]);
+                const speed_v = Math.abs(v[idx]);
+                const speed_sq = speed_u * speed_u + speed_v * speed_v;
+                max_vel = Math.max(max_vel, Math.sqrt(speed_sq));
+
+                const cfl = dt_val * (speed_u / dx + speed_v / dy);
+                if (cfl > max_cfl) max_cfl = cfl;
+
+                const divergence_val = div[idx];
+                divergence_l2_norm_sq += divergence_val * divergence_val;
+                
+                kineticEnergy += 0.5 * speed_sq * ambientDensity * cellVolume;
+                totalVorticity += Math.abs(vort[idx]);
+                cellCount++;
+            }
+        }
+    }
+    const divergence_l2_norm = Math.sqrt(divergence_l2_norm_sq / cellCount);
+    
+    const thermalEnergy = calculateTotalThermalEnergy();
+    const momentum = calculateTotalMomentum();
+    const keHistogram = calculateKineticEnergyHistogram();
+    
+    // Unificar dados usando as chaves corretas que o relatório espera
+    originalRecordedData.push({
+        'Tempo (s)': parseFloat(simulationTimeRecorded.toFixed(3)),
+        'Energia Cinética (J)': kineticEnergy,
+        'Energia Térmica (J)': thermalEnergy,
+        'Momento Linear X (kg·m/s)': momentum.x,
+        'Momento Linear Y (kg·m/s)': momentum.y,
+        'Vorticidade Total (1/s)': totalVorticity,
+        'Pressão Média (Pa)': pressureStats.avg,
+        'Pressão Máx (Pa)': pressureStats.max,
+        'Pressão Mín (Pa)': pressureStats.min,
+        'Número CFL Máx': max_cfl,
+        'Velocidade Máx (m/s)': max_vel,
+        'Residual Div. (L2)': divergence_l2_norm,
+        'Histograma EC': keHistogram,
+        'snapshot': snapshot // Adiciona o snapshot para a timeline
+    });
+}
+
+
+// --- FUNCIONALIDADE DE EXPORTAÇÃO DE GIF ---
+function exportGIF() {
+    if (!recordedData || recordedData.length === 0) {
+        alert('Nenhuma gravação disponível para exportar.');
+        return;
+    }
+
+    const exportBtn = document.getElementById('exportGifBtn');
+    const originalText = exportBtn.innerHTML;
+
+    exportBtn.disabled = true;
+    exportBtn.innerHTML = `
+        <svg class="icon" viewBox="0 0 24 24" style="animation: spin 1s linear infinite;">
+            <path d="M12,4V2A10,10 0 0,0 2,12H4A8,8 0 0,1 12,4Z"/>
+        </svg>
+        Gerando GIF...
+    `;
+
+    // Obter configurações do HTML
+    const fps = parseInt(document.getElementById('gifFpsInput').value) || 10;
+    const delay = 1000 / fps; // Delay entre frames em milissegundos
+
+    // A qualidade agora é controlada pela biblioteca (1-30, onde 1 é melhor)
+    const qualityMap = {
+        low: 30,
+        medium: 15,
+        high: 5
+    };
+    const quality = qualityMap[document.getElementById('gifQualitySelect').value] || 15;
+
+    // Usar setTimeout para não bloquear a UI enquanto o GIF é preparado
+    setTimeout(() => {
+        generateGIFFromFrames(delay, quality, (blob) => {
+            if (blob) {
+                downloadGIF(blob);
+                exportBtn.innerHTML = `
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M9 16.2L4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4L9 16.2z"/></svg>
+                    GIF Exportado!
+                `;
+            } else {
+                alert('Ocorreu um erro ao gerar o GIF.');
+                exportBtn.innerHTML = originalText;
+            }
+
+            // Resetar o botão após um tempo
+            setTimeout(() => {
+                exportBtn.innerHTML = originalText;
+                exportBtn.disabled = false;
+            }, 3000);
+        });
+    }, 100);
+}
+
+function generateGIFFromFrames(delay, quality, callback) {
+    // Instancia a biblioteca GIF.js
+    const gif = new GIF({
+        workers: 2, // Número de threads para processar o GIF
+        quality: quality, // Qualidade (1 = melhor, 30 = pior)
+        workerScript: './gif.worker.js' 
+    });
+
+    // Cria um canvas temporário para desenhar cada frame
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // --- INÍCIO DA CORREÇÃO: LÓGICA DE REAMOSTRAGEM ---
+
+    const recordedFrames = recordedData;
+    if (recordedFrames.length === 0) {
+        callback(null);
+        return;
+    }
+
+    // 1. Calcular a duração total da simulação em segundos
+    const simulationDuration = recordedFrames[recordedFrames.length - 1]['Tempo (s)'];
+    const gifFps = 1000 / delay;
+    
+    // 2. Calcular quantos frames o GIF final deve ter
+    const totalGifFrames = Math.round(simulationDuration * gifFps);
+    
+    let recordedFrameIndex = 0;
+
+    // 3. Loop através dos frames do GIF, não dos frames gravados
+    for (let i = 0; i < totalGifFrames; i++) {
+        // O tempo alvo para este frame específico do GIF
+        const targetTime = i / gifFps;
+
+        // Encontra o frame gravado mais próximo do tempo alvo
+        // (Avança o ponteiro `recordedFrameIndex` para ser mais eficiente)
+        while (recordedFrameIndex < recordedFrames.length - 1 &&
+               Math.abs(recordedFrames[recordedFrameIndex + 1]['Tempo (s)'] - targetTime) <
+               Math.abs(recordedFrames[recordedFrameIndex]['Tempo (s)'] - targetTime)) {
+            recordedFrameIndex++;
+        }
+
+        const frameData = recordedFrames[recordedFrameIndex];
+        
+        if (frameData && frameData.snapshot) {
+            const imageData = new ImageData(frameData.snapshot, canvas.width, canvas.height);
+            tempCtx.putImageData(imageData, 0, 0);
+            // Adiciona o frame ao GIF com o delay correto e constante
+            gif.addFrame(tempCanvas, { copy: true, delay: delay });
+        }
+    }
+    
+    // --- FIM DA CORREÇÃO ---
+
+
+    // Define o que fazer quando a renderização do GIF terminar
+    gif.on('finished', (blob) => {
+        callback(blob);
+    });
+    
+    // Inicia o processo de renderização do GIF
+    gif.render();
+}
+
+function createGIFFromImageData(frames, delay, settings, callback) {
+    try {
+        // Implementação simplificada - criar um "pseudo-GIF" usando canvas animado
+        // Em uma implementação real, seria necessário usar uma biblioteca como gif.js
+        
+        // Por enquanto, vamos criar um arquivo de imagem estática do último frame
+        // e simular o download
+        
+        if (frames.length === 0) {
+            callback(null);
+            return;
+        }
+        
+        // Usar o último frame como imagem estática
+        const lastFrame = frames[frames.length - 1];
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = settings.width;
+        canvas.height = settings.height;
+        ctx.putImageData(lastFrame, 0, 0);
+        
+        // Adicionar texto indicando que é uma sequência
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(0, 0, canvas.width, 20);
+        ctx.fillStyle = 'white';
+        ctx.font = '12px Arial';
+        ctx.fillText(`Sequência: ${frames.length} frames @ ${Math.round(1000/delay)}fps`, 5, 15);
+        
+        canvas.toBlob((blob) => {
+            callback(blob);
+        }, 'image/png');
+        
+    } catch (error) {
+        console.error('Erro ao criar GIF:', error);
+        callback(null);
+    }
+}
+
+function downloadGIF(blob) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    // CORREÇÃO: Altera a extensão do arquivo para .gif
+    a.download = `simulacao_fluidos_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.gif`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// Adicionar estilo para animação de spin
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+
